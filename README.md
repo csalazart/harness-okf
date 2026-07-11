@@ -1,6 +1,6 @@
 # harness-okf
 > Instalador de **cerebros de conocimiento OKF** autocontenidos, por proyecto.
-> Herramienta hermana de [harness-kit](https://github.com/csalazart/harness-kit) — mismo ecosistema (`.harness/`), responsabilidades separadas.
+> Herramienta hermana de [harness-kit-install](https://github.com/csalazart/harness-kit-install) — mismo ecosistema (`.harness/`), responsabilidades separadas.
 
 ---
 
@@ -35,6 +35,12 @@ Contrato completo: [OKF.md](OKF.md).
    (`okf-ingest`, `okf-query`, `okf-lint`) y un validador real (`okf-check.js`).
 
 ## Reparto con harness-kit
+
+> **Kit completo (recomendado):** instala primero
+> [harness-kit-install](https://github.com/csalazart/harness-kit-install)
+> (flujo de trabajo v3) y después este harness-okf — su instalador detecta el
+> `.harness/` existente y añade solo sus piezas. Cualquier orden funciona y
+> cada herramienta es usable por sí sola.
 
 | | harness-kit | harness-okf |
 |---|---|---|
