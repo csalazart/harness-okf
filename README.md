@@ -68,7 +68,10 @@ harness-okf/
 │   ├── pages/                 _concepto, _entidad, _fuente, _playbook, _sintesis
 │   └── skills/                okf-ingest, okf-query, okf-lint
 └── scripts/
-    └── okf-check.js  validador de conformance (Node, sin dependencias)
+    ├── okf-check.js        validador de conformance (Node, sin dependencias)
+    └── okf-link-skills.js  publica los skills okf-* en .claude/.gemini/.agents
+                            (junction en Windows sin admin, symlink en mac/linux,
+                            fallback a copia)
 ```
 
 ## Qué genera en el proyecto anfitrión
@@ -83,6 +86,6 @@ harness-okf/
     │   ├── raw/index.md    inventario de fuentes ⬜/✅
     │   ├── wiki/<categoria>/index.md
     │   └── _templates/
-    ├── skills/okf-{ingest,query,lint}.md
-    └── scripts/okf-check.js
+    ├── skills/okf-{ingest,query,lint}/SKILL.md
+    └── scripts/  okf-check.js · okf-link-skills.js
 ```

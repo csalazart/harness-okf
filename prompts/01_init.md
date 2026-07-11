@@ -68,14 +68,17 @@ Genera desde `<harness-okf>/templates/`, rellenando TODOS los placeholders
    ← `templates/brain/categoria-index.md.template` (con el checklist de páginas
    candidatas de FASE B.6). Incluye `wiki/fuentes/index.md`.
 7. `.harness/llm-wiki/_templates/` ← copia los 5 de `templates/pages/`.
-8. **Skills:** copia `templates/skills/okf-ingest.md`, `okf-query.md`,
-   `okf-lint.md` a `.harness/skills/`. Si existe `.claude/skills/` (o `.gemini/`,
-   `.agents/`), asegúrate de que los skills quedan accesibles ahí: si
-   `.claude/skills` ya es un enlace a `.harness/skills` (harness-kit), no hagas
-   nada; si no, crea carpeta por skill (`.claude/skills/okf-ingest/SKILL.md`…)
-   o copia según la convención del agente.
-9. **Validador:** copia `<harness-okf>/scripts/okf-check.js` a
-   `.harness/scripts/okf-check.js`.
+8. **Skills:** copia cada skill de `templates/skills/` al formato carpeta:
+   `.harness/skills/okf-ingest/SKILL.md`, `.harness/skills/okf-query/SKILL.md`,
+   `.harness/skills/okf-lint/SKILL.md`.
+9. **Scripts:** copia `<harness-okf>/scripts/okf-check.js` y
+   `<harness-okf>/scripts/okf-link-skills.js` a `.harness/scripts/`.
+   Ejecuta `node .harness/scripts/okf-link-skills.js` — publica los skills en
+   las carpetas de los agentes detectados (`.claude/skills/`, `.gemini/skills/`,
+   `.agents/skills/`): usa junctions en Windows (sin permisos de admin) o
+   symlinks en macOS/Linux, con fallback a copia, y respeta los skills ajenos
+   y los enlaces que harness-kit ya hubiera creado. Debe terminar en
+   `[SKILLS OK]`.
 10. **Registro en el agente** — es lo que hace que cualquier agente SEPA que el
     cerebro existe. Regla simple: **el contenido vive en AGENTS.md; CLAUDE.md
     solo lo importa**. Vale para los tres escenarios: solo harness-okf, solo
