@@ -1,0 +1,17 @@
+---
+type: Overview
+title: {{CATEGORIA_TITULO}} — {{PROJECT_NAME}}
+description: {{CATEGORIA_DESC}}
+timestamp: {{DATE}}
+---
+
+# {{CATEGORIA_TITULO}}
+
+{{CATEGORIA_INTRO}}
+
+## Páginas a crear
+
+<!-- Checklist inicial propuesto por el instalador. El agente lo va completando
+     con las ingestas y convierte cada ítem en link cuando la página existe -->
+- [ ] `{{PAGINA_1_SLUG}}.md` — {{PAGINA_1_DESC}}
+- [ ] `{{PAGINA_2_SLUG}}.md` — {{PAGINA_2_DESC}}

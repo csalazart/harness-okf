@@ -1,0 +1,46 @@
+---
+type: Overview
+title: Contrato del cerebro de {{PROJECT_NAME}}
+description: El contrato OKF en una hoja — reglas de formato, capas y mantenimiento.
+timestamp: {{DATE}}
+---
+
+# 🧠 Cerebro OKF — {{PROJECT_NAME}}
+> Knowledge base autocontenida del proyecto en Open Knowledge Format.
+> Este cerebro describe **{{PROJECT_NAME}}**, no el harness-okf.
+> Generado: {{DATE}} con harness-okf
+
+---
+
+## El contrato (todo lo que necesitas saber)
+
+1. **Un concepto = un fichero `.md`.** La ruta del fichero es su identidad.
+2. **Cabecera YAML obligatoria** con al menos `type:`. Recomendados: `title`,
+   `description`, `resource` (ruta al recurso real), `tags`, `timestamp`.
+   Tag especial `volatil` para datos que caducan.
+3. **Cuerpo Markdown libre** — esquemas, tablas, runbooks, lo que aporte.
+4. **Enlaces con links Markdown** a rutas relativas → forman el grafo. Ninguna
+   página huérfana.
+5. **Ficheros reservados:** `index.md` (god node / resumen de carpeta) y
+   `log.md` (histórico cronológico append-only).
+6. **Tres capas:** `raw/` (fuentes inmutables, las cura el humano) → `wiki/`
+   (páginas, las mantiene el agente) → `SCHEMA.md` (convenciones, co-evoluciona).
+
+## Cómo navegar
+
+Empieza siempre por [`index.md`](index.md) (el god node). Sigue solo los links
+relevantes a tu tarea — **progressive disclosure**, no cargues todo.
+
+## Cómo se mantiene
+
+Tres skills en `.harness/skills/`: **okf-ingest** (integrar una fuente nueva),
+**okf-query** (consultar y archivar síntesis), **okf-lint** (health-check).
+Toda escritura actualiza `timestamp` y deja entrada en [`log.md`](log.md).
+Conformance: `node .harness/scripts/okf-check.js`.
+
+## Independencia
+
+Este cerebro es autocontenido: todo el conocimiento que {{PROJECT_NAME}} necesita
+vive aquí. No depende de vaults externos ni de otros proyectos.
+
+> Convenciones específicas de este proyecto: [SCHEMA.md](SCHEMA.md)

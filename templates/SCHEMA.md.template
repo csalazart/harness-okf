@@ -1,0 +1,73 @@
+---
+type: Schema
+title: Esquema del cerebro de {{PROJECT_NAME}}
+description: Reglas que todo agente LLM debe seguir para ingerir fuentes, responder consultas y mantener este cerebro.
+tags: [schema, convenciones]
+timestamp: {{DATE}}
+---
+
+# SCHEMA — Cómo operar sobre este cerebro
+
+Un agente que trabaje sobre `.harness/llm-wiki/` **debe leer este fichero primero**.
+Contrato completo: [README.md](README.md). Este fichero lo adapta a {{PROJECT_NAME}}.
+
+## 1. Vocabulario de tipos de este proyecto
+
+<!-- El instalador rellena esta tabla en FASE C con lo confirmado en FASE B -->
+| `type` | Qué representa en {{PROJECT_NAME}} |
+|--------|-------------------------------------|
+| `Concepto` | Idea o tema del dominio |
+| `Entidad` | Cosa concreta con identidad (con `resource:` al recurso real) |
+| `Fuente` | Resumen de un documento de `raw/` (con `resource:` y fiabilidad) |
+| `Playbook` | Procedimiento operativo |
+| `Sintesis` | Respuesta valiosa archivada |
+| {{HOST_TYPE_1}} | {{HOST_TYPE_1_DESC}} |
+| {{HOST_TYPE_2}} | {{HOST_TYPE_2_DESC}} |
+
+## 2. Categorías del wiki
+
+<!-- Una fila por carpeta de wiki/ -->
+| Categoría | Qué contiene |
+|---|---|
+| {{CATEGORIA_1}} | {{CATEGORIA_1_DESC}} |
+| {{CATEGORIA_2}} | {{CATEGORIA_2_DESC}} |
+| `fuentes` | Una página `Fuente` por documento ingerido |
+
+## 3. Reglas de enlazado
+
+- Links Markdown a rutas relativas dentro de `llm-wiki/`. El conjunto de links es el grafo.
+- Cada página nueva se enlaza desde el `index.md` de su categoría (nada de huérfanas).
+- Este cerebro es **autocontenido**: no enlazar a vaults ni cerebros externos.
+
+## 4. Workflows (los ejecutan los skills okf-*)
+
+### Ingest (`okf-ingest`)
+1. El humano deposita el documento en `raw/` (o lo referencia in situ en `raw/index.md`).
+2. Crear página `Fuente` en `wiki/fuentes/` con resumen, `resource:` y fiabilidad.
+3. Actualizar las páginas `Concepto`/`Entidad` afectadas (una fuente puede tocar 10-15).
+4. Marcar contradicciones con el conocimiento previo en `## Contradicciones`.
+5. Actualizar `raw/index.md` (⬜→✅), los `index.md` de categoría y el god node si aplica.
+6. Entrada en `log.md`: `## [{{DATE_SHORT}}] ingest | Título de la fuente`.
+
+### Query (`okf-query`)
+1. Leer `index.md` (god node) → localizar páginas → leerlas → sintetizar citando páginas.
+2. Si la respuesta tiene valor duradero, archivarla como `Sintesis` y enlazarla desde el índice.
+
+### Lint (`okf-lint`)
+Buscar: contradicciones entre páginas, claims obsoletos, huérfanas, conceptos sin página,
+páginas `volatil` con `timestamp` caducado, huecos que una búsqueda podría llenar.
+Registrar en `log.md` como entrada `lint`.
+
+## 5. Reglas específicas de {{PROJECT_NAME}}
+
+<!-- El instalador añade aquí reglas del dominio. Ejemplos según proyecto:
+     - "Todo dato de mercado (APR, TVL, precio) lleva tags: [volatil] y fecha inline."
+     - "Toda afirmación legal cita la norma o fuente oficial."
+     - "Separar claim de marketing de hecho verificado." -->
+{{REGLAS_DOMINIO}}
+
+Reglas siempre presentes:
+- Toda afirmación factual relevante debe trazarse a una página `Fuente` o un `resource:`.
+  Sin fuente → marcar `(sin verificar)`.
+- **Nunca** guardar claves privadas, seeds, tokens o credenciales.
+- Idioma de las páginas: {{IDIOMA}}; términos técnicos en su forma original.

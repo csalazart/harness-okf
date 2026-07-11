@@ -1,0 +1,37 @@
+---
+type: Overview
+title: {{PROJECT_NAME}} — Mapa del cerebro
+description: God node del cerebro OKF. Punto de entrada único para agentes IA.
+tags: [index, god-node]
+timestamp: {{DATE}}
+---
+
+# 🗺️ {{PROJECT_NAME}} — Mapa del cerebro
+
+> **Empieza aquí.** Este es el único fichero que un agente carga *siempre*.
+> Sigue solo los links relevantes a tu tarea (progressive disclosure).
+
+## Qué es este proyecto
+
+{{PROJECT_ONE_LINER}}
+
+## Categorías
+
+<!-- Una fila por carpeta de wiki/. El instalador las rellena en FASE C -->
+| Categoría | Qué contiene | Entrada |
+|------|--------------|---------|
+| {{CATEGORIA_1}} | {{CATEGORIA_1_DESC}} | [wiki/{{CATEGORIA_1_SLUG}}/](wiki/{{CATEGORIA_1_SLUG}}/index.md) |
+| {{CATEGORIA_2}} | {{CATEGORIA_2_DESC}} | [wiki/{{CATEGORIA_2_SLUG}}/](wiki/{{CATEGORIA_2_SLUG}}/index.md) |
+| Fuentes ingeridas | Una página por documento procesado | [wiki/fuentes/](wiki/fuentes/index.md) |
+
+## Fuentes pendientes
+
+Ver [raw/index.md](raw/index.md) — inventario de fuentes con estado ⬜/✅.
+
+## Páginas destacadas
+
+<!-- Los conceptos más conectados / consultados. El agente mantiene esta lista -->
+- (se rellena con las primeras ingestas)
+
+---
+> Contrato: [README.md](README.md) · Convenciones: [SCHEMA.md](SCHEMA.md) · Histórico: [log.md](log.md)

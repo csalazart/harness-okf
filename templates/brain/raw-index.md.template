@@ -1,0 +1,24 @@
+---
+type: Overview
+title: Fuentes raw — {{PROJECT_NAME}}
+description: Inventario de fuentes inmutables. El agente lee de aquí, nunca escribe ni modifica.
+timestamp: {{DATE}}
+---
+
+# raw/ — Fuentes
+
+Los documentos originales se depositan en esta carpeta **o** se referencian in situ
+(si ya viven en el proyecto no hace falta moverlos). Estados: ⬜ pendiente · ✅ ingerida.
+
+## Fuentes identificadas
+
+<!-- El instalador rellena esta tabla en FASE C con lo detectado en FASE A -->
+| Estado | Fuente | Ubicación |
+|---|---|---|
+| ⬜ | {{FUENTE_1}} | `{{FUENTE_1_PATH}}` |
+| ⬜ | {{FUENTE_2}} | `{{FUENTE_2_PATH}}` |
+
+## Fuentes externas a buscar
+
+<!-- Documentación oficial, artículos, specs que convendría conseguir -->
+- {{FUENTE_EXTERNA_1}}

@@ -1,0 +1,15 @@
+---
+type: Log
+title: Log del cerebro de {{PROJECT_NAME}}
+description: Historial cronológico append-only de operaciones sobre este cerebro.
+timestamp: {{DATE}}
+---
+
+# Log — {{PROJECT_NAME}}
+
+Formato: `## [YYYY-MM-DD] <op> | <título>` con op ∈ {setup, ingest, query, lint}.
+Últimas entradas: `grep "^## \[" log.md | tail -5`
+
+## [{{DATE_SHORT}}] setup | Cerebro creado con harness-okf
+Estructura inicial generada. Categorías: {{CATEGORIAS_LISTA}}.
+Pendiente: primeras ingestas (ver raw/index.md).
