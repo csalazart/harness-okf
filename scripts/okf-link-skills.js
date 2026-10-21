@@ -1,81 +1,58 @@
 #!/usr/bin/env node
 /**
- * okf-link-skills.js — Publica los skills okf-* en las carpetas de skills de
- * los agentes IA del proyecto (.claude/skills, .gemini/skills, .agents/skills).
+ * okf-link-skills.js — Instala los skills okf-* en la carpeta estándar
+ * .agents/skills/okf/ y los publica en las carpetas de skills de los agentes
+ * IA del proyecto (.claude/skills, .gemini/skills).
  *
- * USO: node .harness/scripts/okf-link-skills.js [--copy]
- *   --copy   fuerza copia de ficheros (sin enlaces) en todos los agentes
+ * USO:
+ *   node .harness/scripts/okf-link-skills.js [--copy]
+ *   node <harness-okf>/scripts/okf-link-skills.js [--copy]   (desde el proyecto)
+ *     --copy   fuerza copia de ficheros (sin enlaces) en los agentes
  *
- * Fuente de verdad: .harness/skills/okf-<nombre>/SKILL.md
- * (si encuentra el formato plano .harness/skills/okf-<nombre>.md lo normaliza
- *  automáticamente a carpeta/SKILL.md antes de enlazar)
+ * Fuente de verdad: .agents/skills/okf/okf-<nombre>/SKILL.md
+ *   - Si el script se ejecuta desde el repo harness-okf (existe
+ *     ../templates/skills/), copia ahí los skills de las plantillas
+ *     (sobrescribe: así se actualizan).
+ *   - Si no, y existen skills en el formato antiguo .harness/skills/okf-*,
+ *     los migra a .agents/skills/okf/.
  *
- * Estrategia por agente detectado:
- *   1. <agente>/skills es ya un enlace a .harness/skills  → nada que hacer
- *      (caso harness-kit: nuestros skills ya son visibles a través del enlace).
- *   2. <agente>/skills no existe                          → enlace por skill.
- *   3. <agente>/skills existe como carpeta real           → enlace POR SKILL
- *      dentro de ella, sin tocar los skills ajenos.
+ * Estrategia por agente (.claude siempre; .gemini solo si existe .gemini/):
+ *   1. <agente>/skills no existe            → enlace <agente>/skills → .agents/skills
+ *   2. <agente>/skills ya enlaza a .agents/skills → nada que hacer
+ *   3. <agente>/skills existe               → enlace <agente>/skills/okf →
+ *                                             .agents/skills/okf (sin tocar
+ *                                             los skills ajenos)
  *
  * Enlaces según plataforma:
  *   - Windows: junction de directorio (NO requiere administrador ni Developer
- *     Mode). Si falla → copia.
+ *     Mode). Si falla → copia de .agents/skills/okf.
  *   - macOS/Linux: symlink normal. Si falla → copia.
- *   - La copia funciona siempre, pero no se sincroniza sola: re-ejecuta este
- *     script tras modificar un skill.
+ *   - La copia lleva un marcador (.okf-copy) y se refresca en cada ejecución:
+ *     re-ejecuta este script tras modificar un skill.
  */
 'use strict';
 const fs = require('fs');
 const path = require('path');
 
 const FORCE_COPY = process.argv.includes('--copy');
+const COPY_MARKER = '.okf-copy';
 
-// ROOT del proyecto: este script vive en <proyecto>/.harness/scripts/
+// ROOT del proyecto: si el script vive en <proyecto>/.harness/scripts/ se
+// deduce de su ruta; si no (ejecutado desde el repo harness-okf), es el cwd.
 let ROOT = __dirname.replace(/[\\/]\.harness[\\/]scripts$/, '');
-if (ROOT === __dirname) ROOT = process.cwd(); // ejecutado desde otro sitio
+if (ROOT === __dirname) ROOT = process.cwd();
 
-const SRC = path.join(ROOT, '.harness', 'skills');
+const TEMPLATES = path.join(__dirname, '..', 'templates', 'skills');
+const LEGACY = path.join(ROOT, '.harness', 'skills');
+const AGENTS_SKILLS = path.join(ROOT, '.agents', 'skills');
+const OKF = path.join(AGENTS_SKILLS, 'okf');
 
 const AGENTS = [
-  { name: 'Claude Code', root: '.claude' },
-  { name: 'Gemini', root: '.gemini' },
-  { name: 'Estándar (.agents)', root: '.agents' },
+  { name: 'Claude Code', root: '.claude', always: true },
+  { name: 'Gemini', root: '.gemini', always: false },
 ];
 
 function log(msg) { console.log('  ' + msg); }
-
-// ── 0. fuente ────────────────────────────────────────────────
-if (!fs.existsSync(SRC)) {
-  console.log('⚠️  No existe .harness/skills/ — instala primero el cerebro (prompts/01_init.md).');
-  process.exit(1);
-}
-
-// Normalizar formato plano okf-*.md → okf-*/SKILL.md
-for (const entry of fs.readdirSync(SRC, { withFileTypes: true })) {
-  if (entry.isFile() && /^okf-.+\.md$/i.test(entry.name)) {
-    const name = entry.name.replace(/\.md$/i, '');
-    const dir = path.join(SRC, name);
-    fs.mkdirSync(dir, { recursive: true });
-    fs.renameSync(path.join(SRC, entry.name), path.join(dir, 'SKILL.md'));
-    log(`🔧 normalizado: skills/${entry.name} → skills/${name}/SKILL.md`);
-  }
-}
-
-// Skills okf-* disponibles (carpetas con SKILL.md)
-const skills = fs.readdirSync(SRC, { withFileTypes: true })
-  .filter((e) => e.isDirectory() && /^okf-/.test(e.name)
-    && fs.existsSync(path.join(SRC, e.name, 'SKILL.md')))
-  .map((e) => e.name);
-
-if (skills.length === 0) {
-  console.log('⚠️  No hay skills okf-* en .harness/skills/ — nada que publicar.');
-  process.exit(1);
-}
-
-console.log('\n════════════════════════════════════════════');
-console.log('  OKF LINK SKILLS');
-console.log('════════════════════════════════════════════');
-log(`Skills: ${skills.join(', ')}`);
 
 // ── helpers ──────────────────────────────────────────────────
 function isLinkTo(linkPath, expectedTarget) {
@@ -87,71 +64,133 @@ function isLinkTo(linkPath, expectedTarget) {
   } catch { return false; }
 }
 
-function linkOrCopyDir(srcDir, destDir) {
-  if (!FORCE_COPY) {
-    try {
-      const type = process.platform === 'win32' ? 'junction' : 'dir';
-      fs.symlinkSync(srcDir, destDir, type);
-      return 'enlace';
-    } catch (_) { /* fallback copia */ }
-  }
+function exists(p) {
+  try { fs.lstatSync(p); return true; } catch { return false; }
+}
+
+function copyDir(srcDir, destDir) {
   fs.mkdirSync(destDir, { recursive: true });
   for (const e of fs.readdirSync(srcDir, { withFileTypes: true })) {
     const s = path.join(srcDir, e.name);
     const d = path.join(destDir, e.name);
-    if (e.isDirectory()) linkOrCopyDirPlain(s, d);
-    else fs.copyFileSync(s, d);
-  }
-  return 'copia';
-}
-function linkOrCopyDirPlain(srcDir, destDir) {
-  fs.mkdirSync(destDir, { recursive: true });
-  for (const e of fs.readdirSync(srcDir, { withFileTypes: true })) {
-    const s = path.join(srcDir, e.name);
-    const d = path.join(destDir, e.name);
-    if (e.isDirectory()) linkOrCopyDirPlain(s, d);
+    if (e.isDirectory()) copyDir(s, d);
     else fs.copyFileSync(s, d);
   }
 }
+
+function link(srcDir, destDir) {
+  const type = process.platform === 'win32' ? 'junction' : 'dir';
+  fs.symlinkSync(srcDir, destDir, type);
+}
+
+// Copia .agents/skills/okf → destDir marcándola como copia gestionada.
+function copyOkf(destDir) {
+  copyDir(OKF, destDir);
+  fs.writeFileSync(path.join(destDir, COPY_MARKER), 'Copia gestionada por okf-link-skills.js\n');
+}
+
+// ── 0. fuente: .agents/skills/okf ────────────────────────────
+console.log('\n════════════════════════════════════════════');
+console.log('  OKF LINK SKILLS');
+console.log('════════════════════════════════════════════');
+
+if (fs.existsSync(TEMPLATES)) {
+  for (const f of fs.readdirSync(TEMPLATES)) {
+    if (!/^okf-.+\.md$/i.test(f)) continue;
+    const dir = path.join(OKF, f.replace(/\.md$/i, ''));
+    fs.mkdirSync(dir, { recursive: true });
+    fs.copyFileSync(path.join(TEMPLATES, f), path.join(dir, 'SKILL.md'));
+  }
+  log('📦 skills copiados desde templates/skills/ → .agents/skills/okf/');
+} else if (!fs.existsSync(OKF) && fs.existsSync(LEGACY)) {
+  for (const e of fs.readdirSync(LEGACY, { withFileTypes: true })) {
+    if (e.isDirectory() && /^okf-/.test(e.name)) {
+      copyDir(path.join(LEGACY, e.name), path.join(OKF, e.name));
+    } else if (e.isFile() && /^okf-.+\.md$/i.test(e.name)) {
+      const dir = path.join(OKF, e.name.replace(/\.md$/i, ''));
+      fs.mkdirSync(dir, { recursive: true });
+      fs.copyFileSync(path.join(LEGACY, e.name), path.join(dir, 'SKILL.md'));
+    }
+  }
+  log('🔧 migrados .harness/skills/okf-* → .agents/skills/okf/');
+  log('   (puedes borrar .harness/skills/okf-* cuando lo verifiques)');
+}
+
+const skills = fs.existsSync(OKF)
+  ? fs.readdirSync(OKF, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && fs.existsSync(path.join(OKF, e.name, 'SKILL.md')))
+    .map((e) => e.name)
+  : [];
+
+if (skills.length === 0) {
+  log('⚠️  No hay skills en .agents/skills/okf/ — instala primero el cerebro (prompts/01_init.md).');
+  console.log('════════════════════════════════════════════\n');
+  process.exit(1);
+}
+log(`Skills: ${skills.join(', ')}`);
 
 // ── 1. agentes ───────────────────────────────────────────────
-const active = AGENTS.filter((a) => fs.existsSync(path.join(ROOT, a.root)));
-if (active.length === 0) {
-  log('ℹ️  No se detectó .claude/, .gemini/ ni .agents/ en el proyecto.');
-  log('💡 Crea la carpeta de tu agente (ej. mkdir .claude) y re-ejecuta.');
-  console.log('════════════════════════════════════════════\n');
-  process.exit(0);
-}
-
 let usedCopy = false;
 let failed = 0;
+let published = 0;
 
-for (const agent of active) {
+for (const agent of AGENTS) {
+  if (!agent.always && !fs.existsSync(path.join(ROOT, agent.root))) continue;
   const skillsDir = path.join(ROOT, agent.root, 'skills');
   console.log(`\n  ${agent.name} (${agent.root}/skills/)`);
 
-  // Caso 1: la carpeta entera ya es un enlace a .harness/skills (harness-kit)
-  if (isLinkTo(skillsDir, SRC)) {
-    log(`✅ ya enlazada entera a .harness/skills — los okf-* son visibles`);
-    continue;
-  }
-
-  fs.mkdirSync(skillsDir, { recursive: true });
-
-  // Casos 2 y 3: enlace/copia por skill, sin tocar skills ajenos
-  for (const name of skills) {
-    const src = path.join(SRC, name);
-    const dest = path.join(skillsDir, name);
-    if (isLinkTo(dest, src)) { log(`✅ ${name}: ya enlazado`); continue; }
-    if (fs.existsSync(dest)) { log(`ℹ️  ${name}: ya existe (se conserva)`); continue; }
-    try {
-      const method = linkOrCopyDir(src, dest);
-      if (method === 'copia') usedCopy = true;
-      log(`✅ ${name}: ${method}`);
-    } catch (err) {
-      log(`❌ ${name}: falló (${err.message})`);
-      failed++;
+  try {
+    // Caso 2: ya enlazada entera a .agents/skills
+    if (isLinkTo(skillsDir, AGENTS_SKILLS)) {
+      log('✅ ya enlazada a .agents/skills');
+      published++;
+      continue;
     }
+
+    // Caso 1: no existe → enlace de la carpeta entera
+    if (!exists(skillsDir)) {
+      fs.mkdirSync(path.dirname(skillsDir), { recursive: true });
+      if (!FORCE_COPY) {
+        try {
+          link(AGENTS_SKILLS, skillsDir);
+          log('✅ skills → .agents/skills (enlace)');
+          published++;
+          continue;
+        } catch (_) { /* fallback copia */ }
+      }
+      copyOkf(path.join(skillsDir, 'okf'));
+      usedCopy = true;
+      log('✅ skills/okf: copia');
+      published++;
+      continue;
+    }
+
+    // Caso 3: existe → enlace solo de skills/okf
+    const dest = path.join(skillsDir, 'okf');
+    if (isLinkTo(dest, OKF)) { log('✅ skills/okf: ya enlazado'); published++; continue; }
+    if (exists(dest)) {
+      if (!fs.existsSync(path.join(dest, COPY_MARKER))) {
+        log('ℹ️  skills/okf ya existe y no es de okf-link-skills (se conserva)');
+        continue;
+      }
+      // Copia gestionada: se refresca (o se sustituye por enlace)
+      fs.rmSync(dest, { recursive: true, force: true });
+    }
+    if (!FORCE_COPY) {
+      try {
+        link(OKF, dest);
+        log('✅ skills/okf → .agents/skills/okf (enlace)');
+        published++;
+        continue;
+      } catch (_) { /* fallback copia */ }
+    }
+    copyOkf(dest);
+    usedCopy = true;
+    log('✅ skills/okf: copia');
+    published++;
+  } catch (err) {
+    log(`❌ falló (${err.message})`);
+    failed++;
   }
 }
 
@@ -165,7 +204,7 @@ if (usedCopy) {
   }
 }
 console.log(failed === 0
-  ? `  ✅ [SKILLS OK] ${skills.length} skill(s) publicados en ${active.length} agente(s)`
+  ? `  ✅ [SKILLS OK] ${skills.length} skill(s) en .agents/skills/okf, publicados en ${published} agente(s)`
   : `  ❌ [SKILLS PARCIAL] ${failed} fallo(s) — revisa arriba`);
 console.log('════════════════════════════════════════════\n');
 process.exit(failed > 0 ? 1 : 0);

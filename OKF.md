@@ -41,7 +41,7 @@ páginas existentes, las contradicciones se marcan, la síntesis se acumula.
 Se usa `.harness/` como carpeta contenedora para convivir con `harness-kit`
 (herramienta hermana del mismo ecosistema), pero **harness-okf no lo requiere**:
 si `.harness/` no existe, el instalador la crea. Si existe, solo añade `llm-wiki/`
-y sus skills — nunca toca `context/`, `knowledge/`, `STATE.md` ni nada del harness.
+y sus scripts (los skills van a `.agents/skills/okf/`) — nunca toca `context/`, `knowledge/`, `STATE.md` ni nada del harness.
 
 ### Las tres capas (patrón LLM-Wiki)
 
@@ -132,7 +132,7 @@ y `SecurityInvariant`; uno de investigación legal, `NormaLegal` y `Escenario`.
 ## 5. Operaciones (skills)
 
 El cerebro se mantiene con tres operaciones, instaladas como skills en
-`.harness/skills/`:
+`.agents/skills/okf/` (y enlazadas en `.claude/skills/`):
 
 | Skill | Qué hace |
 |---|---|
