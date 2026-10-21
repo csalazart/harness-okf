@@ -1,6 +1,6 @@
 # Open Knowledge Format (OKF) — Contrato del harness-okf
 > Contrato de conocimiento del **proyecto anfitrión** donde se instala el cerebro.
-> Versión: 0.2 (basado en OKF v0.1 de Google Cloud + patrón LLM-Wiki de Karpathy) | Actualizado: 2026-07-11
+> Versión: 1.2.1 (basado en OKF v0.1 de Google Cloud + patrón LLM-Wiki de Karpathy) | Actualizado: 2026-10-21
 
 ---
 
